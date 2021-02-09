@@ -1,5 +1,5 @@
 import { BooleanType } from './Boolean/index';
-import { ConditionFunc, Decoder, ErrorHandler, ValidSchema, GuardResult, ExtractSchemaType } from "./type"
+import { ConditionFunc, Decoder, ErrorHandler, ValidSchema, GuardResult, ExtractSchemaType, ValueParser } from "./type"
 
 
 export class SchemaError extends Error {
@@ -10,15 +10,17 @@ export class SchemaError extends Error {
 
 export class SchemaBaseType<T = any> {
 
-    // protected beforeDecode: 
-    protected conditions: ConditionFunc<T>[]
+    protected parsers: ValueParser[] = []
+    protected conditions: ConditionFunc<T>[] = []
 
+    protected errStr: string = ''
     protected getErrorMsg<E extends Error> (e?: E) {
-        return ''
+        return this.errStr
     }
 
     protected _addCondition(condition: (v: T) => boolean) {
         this.conditions.push((v) => ({isValid: condition(v)}))
+        return this
     }
 
     public decode(v: unknown): T {
@@ -41,6 +43,9 @@ export class SchemaBaseType<T = any> {
 
     public guard(value: unknown, customerMsg?: string): T {
         try {
+            for (let parser of this.parsers) {
+                value = parser(value)
+            }
             const result = this.decode(value)
             for (let condition of this.conditions) {
                 const check = condition(result)
@@ -49,9 +54,14 @@ export class SchemaBaseType<T = any> {
                 }
             }
             return result
-        } catch {
+        } catch (e) {
+            console.log(e.message)
             this.sendErr(customerMsg)
         }
+    }
+
+    public require() {
+        return this._addCondition(v => v !== undefined && v !== null)
     }
 }
 

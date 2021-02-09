@@ -6,7 +6,7 @@ export declare type ConditionFunc<T = any> = (v: T) => {
     error?: string
 }
 
-export declare type BeforeDecodeHook = (v: unknown) => any
+export declare type ValueParser = (v: unknown) => any
 
 export declare type Decoder<T> = (value: unknown) => T
 
@@ -24,6 +24,7 @@ export declare type ValidSchema<T extends SchemaBaseType = any> =
 
 export declare type ExtractSchemaType<S extends ValidSchema> =
     S extends SchemaBaseType ? ExtractType<S> :
+    // @ts-ignore the type inference is working correctly here
     { [K in keyof S]: ExtractSchemaType<S[K]>}
 
 export declare type GuardResult<S extends ValidSchema> =
