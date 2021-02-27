@@ -55,7 +55,7 @@ export class SchemaBaseType<T = any> {
             }
             return result
         } catch (e) {
-            console.log(e.message)
+            // console.log('Error msg: ', e.message)
             this.sendErr(customerMsg)
         }
     }
@@ -66,7 +66,8 @@ export class SchemaBaseType<T = any> {
 }
 
 export const Schema = <S extends ValidSchema>(
-    schema: S
+    schema: S,
+    // errMsg?: string
 ): SchemaBaseType<GuardResult<S>> => {
     type Result = GuardResult<S>
 
@@ -76,12 +77,15 @@ export const Schema = <S extends ValidSchema>(
         if (schema instanceof SchemaBaseType) {
             return schema.guard(v)
         } else if (Array.isArray(schema)) {
-            return v.map(el => decoder(el))
+            return v.map((el, idx) => Schema(schema[idx]).guard(el))
         } else if (typeof schema === 'object') {
+            if (typeof v !== 'object') {
+                throw new Error()
+            }
             return Object.keys(schema).reduce((total, key) => {
-                total[key] = decoder(v[key])
+                total[key] = Schema(schema[key]).guard(v[key])
                 return total
-            })
+            }, {})
         } else {
             throw new Error()
         }

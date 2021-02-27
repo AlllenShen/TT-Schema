@@ -9,11 +9,21 @@ export class BooleanType extends SchemaBaseType<boolean> {
 
     /** treat some values as false */
     public falsy(value: any) {
-        return this.parsers.push(v => v === value ? false : v)
+        this.parsers.push(v => v === value ? false : v)
+        return this
     }
     /** treat some values as ttue */
     public truthy(value: any) {
-        return this.parsers.push(v => v === value ? true : v)
+        this.parsers.push(v => v === value ? true : v)
+        return this
+    }
+    /** use strict mode
+     * 
+     * do not accept object
+     */
+    public strict() {
+        this.parsers.push(v => typeof v === 'object' ? this.sendErr() : v)
+        return this
     }
 
 }
